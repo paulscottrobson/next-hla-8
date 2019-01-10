@@ -106,7 +106,7 @@ class AssemblerWorker(object):
 	#		Process procedure body.
 	#
 	def processProcBody(self,body):
-		splitElements = ":{}+-*/%&|^!@"+AssemblerWorker.NEWLINE				# split points
+		splitElements = ":{}+-*/%&|^!@(),"+AssemblerWorker.NEWLINE			# split points
 		rx = "(["+"".join(["\\"+x for x in splitElements])+"])"				# make an rx
 		body = re.split(rx,body)											# make into bits.
 		body = [x for x in body if x != ":" and x != ""]					# remove colon seps
