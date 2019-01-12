@@ -3,7 +3,7 @@
 #
 #		Name : 		democodegen.py
 #		Author :	Paul Robson (paul@robsons.org.uk)
-#		Date : 		10th January 2019
+#		Date : 		12th January 2019
 #		Purpose :	Dummy Code Generator class
 #
 # ***************************************************************************************
@@ -46,6 +46,24 @@ class DemoCodeGenerator(object):
 			src = ("#${0:04x}" if isConstant else "(${0:04x})").format(value)
 			print("${0:06x}  {1}   {2}".format(self.pc,self.ops[operator],src))
 			self.pc += 1
+	#
+	#		Store accumulator.to a memory address
+	#
+	def storeDirect(self,address):
+		src = "(${0:04x})".format(address)
+		print("${0:06x}  sta   {1}".format(self.pc,src))
+		self.pc += 1
+	#
+	#		Store accumulator.to an indirect memory address which is the first variable
+	#		contents plus either a constant or another variable's contents.
+	#
+	def storeIndirect(self,address,offsetIsConstant,offset,byteData):
+		print("${0:06x}  tab".format(self.pc))
+		self.pc += 1
+		self.loadDirect(False,address)
+		self.binaryOperation("+",offsetIsConstant,offset)		
+		print("${0:06x}  stb.{1} [a]\n".format(self.pc,"b" if byteData else "w"))
+		self.pc += 1
 	#
 	#		Generate for code.
 	#
