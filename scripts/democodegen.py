@@ -38,7 +38,7 @@ class DemoCodeGenerator(object):
 	#		Do a binary operation on a constant or variable on the accumulator
 	#
 	def binaryOperation(self,operator,isConstant,value):
-		if operator == "!" or operator == "@":
+		if operator == "!" or operator == "?":
 			self.binaryOperation("+",isConstant,value)
 			print("${0:06x}  lda.{1} [a]".format(self.pc,"b" if operator == "?" else "w"))
 			self.pc += 1
@@ -72,9 +72,9 @@ class DemoCodeGenerator(object):
 		print("${0:06x}  push  a".format(self.pc+1))
 		self.pc += 2
 	#
-	#		Gemerate endfor code.
+	#		Gemerate next code.
 	#
-	def endForCode(self,loopAddress):
+	def nextCode(self,loopAddress):
 		print("${0:06x}  pop   a".format(self.pc))
 		self.pc += 1
 		self.jumpInstruction("nz",loopAddress)

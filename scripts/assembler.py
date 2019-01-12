@@ -40,6 +40,7 @@ class AssemblerWorker(object):
 	def assemble(self,src):
 		#
 		AssemblerException.LINE = 0											# reset line ref.
+		self.structStack = [ ["marker"] ] 									# empty structure stack
 		src = [x if x.find("//") < 0 else x[:x.find("//")] for x in src]	# comments
 		src = [x.replace("\t"," ").strip() for x in src]					# tabs and spaces
 		#
@@ -50,10 +51,12 @@ class AssemblerWorker(object):
 		src = [self.processVariables(x) for x in src] 						# process variables.
 		src = [x for x in ("".join(src)).split(":") if x != ""]				# rejoin, split to cmds	
 		for cmd in src:														# process everything.
-			if cmd == "~":
+			if cmd == "~":													# new line marker
 				AssemblerException.LINE += 1
-			else:
+			else:															# command to assemble
 				self.processCommand(cmd)			
+		if len(self.structStack) != 1:										# everything closed ?
+			raise AssemblerException("Structure not closed {0}".format(self.structStack.pop()[0]))
 	#
 	#		Process quoted strings, replacing them with an ASCIIZ version in code
 	#		and the address in the source.
@@ -90,8 +93,44 @@ class AssemblerWorker(object):
 	#
 	def processCommand(self,cmd):
 		print("\t==== "+cmd+" ====")
-		# TODO: IF/WHILE .. ENDIF/ENDWHILE
-		# TODO: FOR/NEXT
+		#
+		if cmd.startswith("while(") or cmd.startswith("if("):				# while and if.
+			topOfLoop = self.codeGen.getAddress()							# loop back.
+			m = re.match("^(\w+)\((.*)([\#\=\<])0\)$",cmd)					# split out expr and test
+			if m is None:
+				raise AssemblerException("Syntax error in while/if")
+			self.processExpression(m.group(2))								# compile expression.
+			branchPoint = self.codeGen.getAddress()							# have to patch here.
+			test = { "#":"z","=":"nz","<":"ge" }[m.group(3)]				# invert test.
+			sInfo = [ m.group(1),test,branchPoint,topOfLoop]				# structure info
+			self.structStack.append(sInfo)									# push on stack.
+			self.codeGen.jumpInstruction(test,branchPoint)					# dummy jump.
+			return
+		#
+		if cmd == "endif" or cmd == "endwhile":
+			sInfo = self.structStack.pop()									# look at structure.
+			if "end"+sInfo[0] != cmd:										# does it match ?
+				raise AssemblerException(cmd+" missing sibling command")
+			if cmd == "endwhile":											# while, jump to top
+				self.codeGen.jumpInstruction("",sInfo[3])
+			self.codeGen.jumpInstruction(sInfo[1],self.codeGen.getAddress(),sInfo[2])	# update the jump.
+			return
+		#
+		if cmd.startswith("for"):						
+			m = re.match("^for\((.*)\)$",cmd)								# check it
+			if m is None:
+				raise AssemblerException("Bad for syntax")
+			self.processExpression(m.group(1))								# for value.
+			self.structStack.append(["for",self.codeGen.getAddress()])		# save on stack.
+			self.codeGen.forCode()											# for code.
+			return	
+		#
+		if cmd == "next":
+			sInfo = self.structStack.pop()									# look at structure.
+			if sInfo[0] != "for":											# check matches up.
+				raise AssemblerException("next without for")			
+			self.codeGen.nextCode(sInfo[1])									# loop code
+			return
 		#
 		if cmd.startswith("defproc"):										# procedure call.
 			m = re.match("^defproc(.*)\((.*)\)$",cmd)						# analyse it.
@@ -114,8 +153,17 @@ class AssemblerWorker(object):
 		#
 		m = re.match("^("+self.rxIdentifier+")\((.*)\)$",cmd)				# procedure invocation
 		if m is not None:
-			# TODO: Invocation code
-			print(m.groups())
+			params = [x for x in m.group(2).split(",") if x != ""]			# get parameters.
+			procName = m.group(1)+"("+str(len(params))						# name of procedure
+			if procName not in self.globals:
+				raise AssemblerException("Unknown procedure or incorrect parameters")
+			for pn in range(0,len(params)):									# set up parameters.
+				m = re.match("^(\@?)(\d+)$",params[pn])			
+				if m is None:
+					raise AssemblerException("Bad parameter ({0}) {1}".format(pn+1,params[pn]))
+				self.codeGen.loadParamRegister(pn,m.group(1) == "",int(m.group(2)))
+
+			self.codeGen.callSubroutine(self.globals[procName])				# call the routine.
 			return
 		#
 		m = re.match("^\@(\d+)=(.*)$",cmd)									# var = expr
@@ -130,19 +178,44 @@ class AssemblerWorker(object):
 			self.codeGen.storeIndirect(int(m.group(1)),m.group(3)=="",		# save indirect
 												int(m.group(4)),m.group(2) == "?")
 			return
-		raise AssemblerException("Syntax Error "+cmd)
+		#
+		raise AssemblerException("Syntax Error "+cmd)						# give up.
 	#
 	#		Assemble expression
 	#
 	def processExpression(self,expr):
-		pass
-		# TODO: Invocation code.
+		operatorList = "+-*/&|^!?"											# known ops
+		regEx = "(["+("".join(["/"+x for x in operatorList]))+"])"			# make a regext
+		expr = [x for x in re.split(regEx,expr) if x != ""]					# split up.	
+		if len(expr) % 2 == 0:
+			raise AssemblerException("Expression syntax error")
+		for i in range(0,len(expr),2):										# work through it.
+			m = re.match("^(\@?)(\d+)$",expr[i])							# term okay
+			if m is None:
+				raise AssemblerException("Term missing")
+			if i == 0:														# first
+				self.codeGen.loadDirect(m.group(1) == "",int(m.group(2)))
+			else:															# subsequent.
+				self.codeGen.binaryOperation(expr[i-1],m.group(1) == "",int(m.group(2)))
+
 if __name__ == "__main__":
 	src = """
-	defproc pr(x,y,z):x = y + @z:x?2=0:x!z=y:endproc
+	defproc pr(x,y,z):x = y + @z:x?2=x?2/7:x!z=y:endproc
 	defproc pr1(a):b = a + $count:endproc			// a comment
 	defproc pr2():pr1("Hello world"):c="end":pr(a,b,c):endproc
+	defproc pr3(a)
+		if(a#0):c=1:endif
+		while(a<0):c=1:endwhile
+		for (42):a=a+1:next
+	endproc
+
 	""".split("\n")
 	aw = AssemblerWorker(DemoCodeGenerator())		
 	aw.assemble(src)
 	print(aw.globals)
+
+# TODO: Outstanding
+#	- tidy up
+#	- some form of index (?), return.
+# 	- Z80 code, image library, kernel.
+#	- Z80 optimising.
