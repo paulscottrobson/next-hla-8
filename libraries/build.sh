@@ -1,14 +1,20 @@
+pushd ../bootloader
+sh build.sh
+popd
 #
 #		Build the individual source files for each library
 #
-rm sources/*
+rm sources/* files/boot.img
 python ../scripts/makelibsource.py
 #
-#		Compact them together.
+#		Compact them together and create dictionary.
 #
-
-echo "FreeMemory:" >>sources/lib.core.libasm
-echo "  org 0xC000" >>sources/lib.core.libasm
-echo "  db  0" >>sources/lib.core.libasm
-
-zasm -buw sources/lib.core.libasm -o boot.img -l boot.lst
+python ../scripts/makesource.py core 
+#
+#		Assemble it.
+#
+zasm -buw boot.asm -o boot.img -l boot.lst
+if [ -e boot.img ]
+then
+cp boot.img ../files
+fi

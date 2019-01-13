@@ -1031,3 +1031,72 @@ PAGERestore:
 	pop  af
 	ret
 
+FreeMemory:
+	org  $C000
+	db   17
+	db   $22
+	dw   IMPORT_47_66_78_53_65_74_4d_6f_64_65_28_31
+	db   12
+	db   "gfxsetmode(1"
+
+	db   15
+	db   $22
+	dw   IMPORT_47_66_78_57_72_69_74_65_28_32
+	db   10
+	db   "gfxwrite(2"
+
+	db   18
+	db   $22
+	dw   IMPORT_47_66_78_57_72_69_74_65_48_65_78_28_32
+	db   13
+	db   "gfxwritehex(2"
+
+	db   13
+	db   $22
+	dw   IMPORT_53_79_73_41_6e_64_28_30
+	db   8
+	db   "sysand(0"
+
+	db   16
+	db   $22
+	dw   IMPORT_53_79_73_44_69_76_69_64_65_28_30
+	db   11
+	db   "sysdivide(0"
+
+	db   14
+	db   $22
+	dw   IMPORT_53_79_73_48_61_6c_74_28_30
+	db   9
+	db   "syshalt(0"
+
+	db   17
+	db   $22
+	dw   IMPORT_53_79_73_4d_6f_64_75_6c_75_73_28_30
+	db   12
+	db   "sysmodulus(0"
+
+	db   18
+	db   $22
+	dw   IMPORT_53_79_73_4d_75_6c_74_69_70_6c_79_28_30
+	db   13
+	db   "sysmultiply(0"
+
+	db   12
+	db   $22
+	dw   IMPORT_53_79_73_4f_72_28_30
+	db   7
+	db   "sysor(0"
+
+	db   22
+	db   $22
+	dw   IMPORT_53_79_73_52_65_61_64_4b_65_79_62_6f_61_72_64_28_31
+	db   17
+	db   "sysreadkeyboard(1"
+
+	db   13
+	db   $22
+	dw   IMPORT_53_79_73_58_6f_72_28_30
+	db   8
+	db   "sysxor(0"
+
+	db 	0

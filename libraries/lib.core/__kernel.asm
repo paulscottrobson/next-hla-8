@@ -26,17 +26,18 @@ StackTop = $7EFC 									;      -$7EFC Top of stack
 		dw 		SystemInformation 
 
 Boot:	ld 		sp,StackTop							; reset Z80 Stack
-		db 		$DD,$01
 		di											; disable interrupts
 		db 		$ED,$91,7,2							; set turbo port (7) to 2 (14Mhz speed)
 		ld 		a,1 								; blue border
-		out 	($FE),a
+		out 	($FE),a		
 		ld 		a,FirstCodePage 					; get the page to start
 		call 	PAGEInitialise
 		ld 		a,(BootPage)						; switch to boot page.
 		call 	PAGEInitialise
 		ld 		hl,(BootAddress)					; start address
 		jp 		(hl)
+
+EXTERN_SysHalt()
 
 StopDefault:	
 		jp 		StopDefault
