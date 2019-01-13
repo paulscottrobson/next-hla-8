@@ -67,10 +67,12 @@ class DemoCodeGenerator(object):
 	#
 	#		Generate for code.
 	#
-	def forCode(self):
+	def forCode(self,indexVar):
 		print("${0:06x}  dec   a".format(self.pc))
 		print("${0:06x}  push  a".format(self.pc+1))
 		self.pc += 2
+		if indexVar is not None:
+			self.storeDirect(indexVar)
 	#
 	#		Gemerate next code.
 	#

@@ -122,7 +122,8 @@ class AssemblerWorker(object):
 				raise AssemblerException("Bad for syntax")
 			self.processExpression(m.group(1))								# for value.
 			self.structStack.append(["for",self.codeGen.getAddress()])		# save on stack.
-			self.codeGen.forCode()											# for code.
+			indexAddress = self.globals["$index"] if "$index" in self.globals else None
+			self.codeGen.forCode(indexAddress)								# for code.			
 			return	
 		#
 		if cmd == "next":
@@ -206,7 +207,7 @@ if __name__ == "__main__":
 	defproc pr3(a)
 		if(a#0):c=1:endif
 		while(a<0):c=1:endwhile
-		for (42):a=a+1:next
+		for (42):a=a+$index:next
 	endproc
 
 	""".split("\n")
@@ -214,8 +215,3 @@ if __name__ == "__main__":
 	aw.assemble(src)
 	print(aw.globals)
 
-# TODO: Outstanding
-#	- tidy up
-#	- some form of index (?), return.
-# 	- Z80 code, image library, kernel.
-#	- Z80 optimising.
