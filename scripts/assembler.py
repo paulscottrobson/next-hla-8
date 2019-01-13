@@ -10,6 +10,7 @@
 # ***************************************************************************************
 
 from democodegen import *
+from z80codegen import *
 import re
 
 # ***************************************************************************************
@@ -201,7 +202,7 @@ class AssemblerWorker(object):
 
 if __name__ == "__main__":
 	src = """
-	defproc pr(x,y,z):x = y + @z:x?2=x?2/7:x!z=y:endproc
+	defproc pr(x,y,z):x = y + @z:x?2=x?2!7:x!z=y:endproc
 	defproc pr1(a):b = a + $count:endproc			// a comment
 	defproc pr2():pr1("Hello world"):c="end":pr(a,b,c):endproc
 	defproc pr3(a)
@@ -209,9 +210,10 @@ if __name__ == "__main__":
 		while(a<0):c=1:endwhile
 		for (42):a=a+$index:next
 	endproc
-
+	def proc p4(a,b,c,d):
+		p4(a,b,c,d):p4(1,2,3,4)
 	""".split("\n")
-	aw = AssemblerWorker(DemoCodeGenerator())		
+	aw = AssemblerWorker(Z80CodeGenerator())		
 	aw.assemble(src)
 	print(aw.globals)
-
+	aw.codeGen.image.save()

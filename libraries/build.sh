@@ -16,5 +16,5 @@ python ../scripts/makesource.py core
 zasm -buw boot.asm -o boot.img -l boot.lst
 if [ -e boot.img ]
 then
-cp boot.img ../files
+	cp boot.img ../files
 fi

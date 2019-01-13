@@ -62,8 +62,6 @@ class MemoryImage(object):
 		self.expandImage(page,address)
 		assert data >= 0 and data < 256
 		self.image[self.address(page,address)] = data
-		if page >= self.read(0,self.sysInfo+4):
-			self.write(0,self.sysInfo+4,page+1)
 	#
 	#		Write byte/word
 	#

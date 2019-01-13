@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "boot.asm"
-              	; date: 2019-01-13 19:49:10
+              	; date: 2019-01-13 21:20:19
               	; --------------------------------------
 
 
@@ -24,14 +24,14 @@
               	;
               	;  Memory allocated from the Unused space in $4000-$7FFF
               	;
-7EFC:         	StackTop = $7EFC          ;      -$7EFC Top of stack
+5FFE:         	StackTop = $5FFE          ; $5B00-$5FFE stack
               	
 8000:         		org  $8000         ; $8000 boot.
 8000: 1804    		jr   Boot
 8002: FFFF    		org  $8004         ; $8004 address of sysinfo
 8004: 2480    		dw   SystemInformation
               	
-8006: 31FC7E  	Boot: ld   sp,StackTop       ; reset Z80 Stack
+8006: 31FE5F  	Boot: ld   sp,StackTop       ; reset Z80 Stack
 8009: F3      		di           ; disable interrupts
 800A: ED910702		db   $ED,$91,7,2       ; set turbo port (7) to 2 (14Mhz speed)
 800E: 3E01    		ld   a,1         ; blue border
@@ -1401,7 +1401,7 @@ SIScreenDriver                             = $8042 = 32834          boot.asm:94
 SIScreenHeight                             = $8038 = 32824          boot.asm:88
 SIScreenMode                               = $803C = 32828          boot.asm:90
 SIScreenWidth                              = $8034 = 32820          boot.asm:86
-StackTop                                   = $7EFC = 32508          boot.asm:21
+StackTop                                   = $5FFE = 24574          boot.asm:21
 StopDefault                                = $8021 = 32801          boot.asm:43
 SystemInformation                          = $8024 = 32804          boot.asm:63
 __Core__Mult_Loop                          = $86BE = 34494          boot.asm:939
@@ -1446,5 +1446,5 @@ _end                                       = $C0B0 = 49328          boot.asm:22 
 _size                                      = $40B0 = 16560          boot.asm:22 (unused)
 
 
-total time: 0.0048 sec.
+total time: 0.0056 sec.
 no errors

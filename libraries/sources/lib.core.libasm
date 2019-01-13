@@ -18,7 +18,7 @@ FirstCodePage = $22         ; first code page.
 ;
 ;  Memory allocated from the Unused space in $4000-$7FFF
 ;
-StackTop = $7EFC          ;      -$7EFC Top of stack
+StackTop = $5FFE          ; $5B00-$5FFE stack
 
 	org  $8000         ; $8000 boot.
 	jr   Boot
