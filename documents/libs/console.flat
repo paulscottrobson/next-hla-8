@@ -1,0 +1,140 @@
+// ***************************************************************************************************************
+// ***************************************************************************************************************
+//
+//		Name : 		console.flat
+//		Author :	Paul Robson (paul@robsons.org.uk)
+//		Date : 		25th November 2018
+//		Purpose :	Console I/O Library for Flat Colour Forth
+//
+// ***************************************************************************************************************
+// ***************************************************************************************************************
+
+:_con.colour 	variable 									// Writing colour in high byte.
+:_con.pos 		variable 									// Screen position
+:_con.base 		variable 									// Integer display base.
+
+// ===============================================================================================================
+//											Set colours
+// ===============================================================================================================
+
+:con.colour ab>r 7 and bswap _con.colour !! r>ab ;
+
+:con.blue ab>r 1 con.colour r>ab  ;
+:con.red ab>r  2 con.colour r>ab  ;
+:con.magenta ab>r  3 con.colour r>ab  ;
+:con.green ab>r  4 con.colour r>ab  ;
+:con.cyan ab>r  5 con.colour r>ab  ;
+:con.yellow ab>r  6 con.colour r>ab  ;
+:con.white ab>r 7 con.colour r>ab ;
+
+// ===============================================================================================================
+//										 Clear Screen / Initialise
+// ===============================================================================================================
+
+:con.home ab>r 0 _con.pos !! r>ab ;
+
+:con.clear 
+	ab>r
+		con.white 0 con.home screen.clear
+	r>ab
+;
+
+// ===============================================================================================================
+//									Raw Emit (e.g. any character, no CR etc.)
+// ===============================================================================================================
+
+:con.emit.raw
+	255 and _con.colour @@ + _con.pos @@ screen! 
+	1 _con.pos +!	
+	display.info 8 + @ 64- + _con.pos @@ = if con.clear then 
+;
+
+// ===============================================================================================================
+//											Carriage return
+// ===============================================================================================================
+
+:con.cr
+	ab>r 
+	begin 
+		32 con.emit.raw 
+		display.info @ -- _con.pos @@ and 0=
+	until
+	r>ab
+;
+
+// ===============================================================================================================
+//									  Emit supporting carriage return
+// ===============================================================================================================
+
+:_con.emit
+	128 and if ; then
+	swap 13 = if con.cr ; then
+	swap 32 < if ; then	
+	swap con.emit.raw
+;
+
+:con.emit ab>r _con.emit r>ab ;
+
+// ===============================================================================================================
+//												Space(s) words
+// ===============================================================================================================
+
+:con.space ab>r 32 con.emit r>ab ;
+:con.spaces ab>r if for con.space next then r>ab ;
+
+// ===============================================================================================================
+//									 Print string (bit 7 / ASCII terminated)
+// ===============================================================================================================
+
+:_con.print.string
+	swap
+	begin
+		b>a c@ 0= if ; then
+		b>a c@ con.emit
+		swap ++ swap
+	again
+;
+
+:con.print.string ab>r _con.print.string r>ab ;
+
+// ===============================================================================================================
+//											Number printing
+// ===============================================================================================================
+
+:_con.digit	10 < 0= if swap 39 + swap then swap 48 + con.emit ;
+
+:_con.rec.print 
+	ab>r _con.base @@ / if _con.rec.print then r>ab _con.base @@ mod _con.digit ;
+
+:_con.print -if - _con.rec.print 45 con.emit ; then  _con.rec.print ;
+
+:con.print.hex
+	ab>r a>r 16 _con.base !! r>a _con.print r>ab ;
+:con.print.dec
+	ab>r a>r 10 _con.base !! r>a _con.print r>ab ;
+:con.print.bin
+	ab>r a>r 2 _con.base !! r>a _con.print r>ab ;
+
+// ===============================================================================================================
+//											Hex byte/word print
+// ===============================================================================================================
+
+:_con.print.nibble 15 and _con.digit ;
+
+:con.print.byte ab>r a>r 2/ 2/ 2/ 2/ _con.print.nibble r>a _con.print.nibble r>ab ;
+
+:con.print.word bswap con.print.byte bswap con.print.byte ;
+
+// ===============================================================================================================
+//										   Get keyboard key press
+// ===============================================================================================================
+
+:_con.keyboard.state variable
+
+:_con.get.change
+	begin inkey _con.keyboard.state @@ = 0= until swap _con.keyboard.state !! ;
+:con.get
+	begin _con.get.change until ;
+
+[con.clear]
+

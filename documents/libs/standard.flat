@@ -1,0 +1,155 @@
+// ***************************************************************************************************************
+// ***************************************************************************************************************
+//
+//		Name : 		standard.flat
+//		Author :	Paul Robson (paul@robsons.org.uk)
+//		Date : 		25th November 2018
+//		Purpose :	Standard word support set for Flat Colour Forth.
+//
+// ***************************************************************************************************************
+// ***************************************************************************************************************
+
+// ===============================================================================================================
+//							Get address of system info and display info
+// ===============================================================================================================
+
+:sys.info 32772 @ ;
+:display.info a>r sys.info 4 + @ r>b ;
+
+// ===============================================================================================================
+//							H puts the address of here into A (does A->B first)
+// ===============================================================================================================
+
+:h a>r sys.info r>b ;									// address of pointer to location.
+
+// ===============================================================================================================
+//						here gets the current address of the code pointer
+// ===============================================================================================================
+
+:here h @ ;
+
+// ===============================================================================================================
+//		Word that when compiled in line compiles a call to variable handler, then allocates 2 bytes of memory
+//									This is used as ":variable.name variable"
+// ===============================================================================================================
+
+:variable [secure]
+	[compiles] 											// make it an immediate word.
+	compiles 											// we want the word just defined (variable) to do something else
+	205 c, 32788 , 										// CALL $8014
+	0 , 												// space for one word
+;
+
+// ===============================================================================================================
+//		  Modifier - when follows a variable generates fast code to store (x ! and x !! do the same job)
+// ===============================================================================================================
+
+:!!  [secure]
+	[compiles]
+	4- h +! 											// backwire to the EX DE,HL
+	0 c, 34 c, 											// make it nop ; ld (xxxx),hl 
+	2 h +! 												// and fix up here
+;
+
+// ===============================================================================================================
+//		  Modifier - when follows a variable generates fast code to load (x @ and x @@ do the same job)
+// ===============================================================================================================
+
+:@@  [secure]
+	[compiles]
+	3- h +! 											// backwire to the LD HL,xxxx
+	42 c, 												// make it nop ; ld hl,(xxxx) 
+	2 h +! 												// and fix up here
+;
+
+// ===============================================================================================================
+//													If/-If/Then words
+// ===============================================================================================================
+
+:_if.branch variable
+
+:if  [secure]
+	[compiles]
+	124 c, 181 c, 										// Compiles LD A,H ; OR L
+	202 c, 												// JZ xxxx
+	here _if.branch !! 									// save the branch address.
+	0 , 												// dummy branch.
+;
+
+:-if  [secure]
+	[compiles]
+	203 c, 124 c, 										// Compiles BIT 7,H
+	202 c, 												// JZ xxxx
+	here _if.branch !! 									// save the branch address.
+	0 , 												// dummy branch.
+;
+
+:then [secure]
+	[compiles]
+	here a>r 											// save current here 
+	_if.branch @@ h ! r>a , 							// set position to branch address, compile here as address
+	h ! 	 											// restore here
+;
+
+// ===============================================================================================================
+//										    Begin/Until/-Until/Again words
+// ===============================================================================================================
+
+:_begin.loop variable
+
+:begin [secure]
+	[compiles]
+	here _begin.loop !! 								// save current posiion
+;
+
+:again [secure]
+	[compiles]
+	195 c, _begin.loop @@ , 							// compile jump back
+;
+
+:until [secure]
+	[compiles]
+	124 c, 181 c, 										// Compiles LD A,H ; OR L
+	202 c, _begin.loop @@ , 							// JZ <back>
+
+;
+
+:-until [secure]
+	[compiles]
+	203 c, 124 c, 										// Compiles BIT 7,H
+	202 c, _begin.loop @@ , 							// JZ <back>
+
+;
+
+// ===============================================================================================================
+//											For/Next/I words
+// ===============================================================================================================
+
+:_for.address variable 
+
+:for [secure]
+	[compiles]
+	here _for.address !! 								// Save loop address
+	43 c, 229 c, 										// DEC HL, PUSH HL
+;
+
+:next [secure]
+	[compiles]
+	225 c, 												// POP HL
+	124 c, 181 c, 										// Compiles LD A,H ; OR L
+	194 c, _for.address @@ , 							// JNZ <back>
+;
+
+:i  [secure]
+	[compiles]
+	235 c, 225 c, 229 c, 								// EX DE,HL ; POP HL ; PUSH HL
+;
+
+// ===============================================================================================================
+//												Min/Max words
+// ===============================================================================================================
+
+:min ab>r < if r>ab b>a ; then r>ab ;
+:max ab>r < if r>ab ; then r>ab b>a ;
+
+		
