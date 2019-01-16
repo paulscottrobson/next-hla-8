@@ -57,6 +57,7 @@ class Z80CodeGenerator(object):
 			self.image.cByte(0xED)												# ld bc,(xxxx)
 			self.image.cByte(0x4B)
 		self.image.cWord(value & 0xFFFF)										# value to use.
+
 		if operator == "+":
 			self.image.cByte(0x09)												# add hl,bc
 			return
@@ -65,7 +66,8 @@ class Z80CodeGenerator(object):
 			self.image.cByte(0xED)												# sbc hl,bc
 			self.image.cByte(0x42)
 			return
-			
+
+					
 	#
 	#		Store accumulator.to a memory address
 	#

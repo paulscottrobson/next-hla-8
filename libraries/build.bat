@@ -8,7 +8,7 @@ rem
 del /Q temp\*
 del /Q boot.img
 python ../scripts/makelibrary.py core
-rem zasm -buw boot.asm -o boot.img -l boot.lst
+..\bin\snasm temp/boot.asm boot.img
 rem
 rem		Copy to files, and the scripts directory for testing
 rem

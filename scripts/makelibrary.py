@@ -38,6 +38,7 @@ class LibBuilder(object):
 					self.hOut.write(l+"\n")
 	#
 	def complete(self):
+		self.hOut.write("FreeMemory:\n")
 		self.hOut.write("\torg $C000\n")
 		keys = [x for x in self.externals.keys()]
 		keys.sort()

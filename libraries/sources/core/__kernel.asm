@@ -20,6 +20,7 @@ FirstCodePage = $22 								; first code page.
 ;
 StackTop = $5FFE 									; $5B00-$5FFE stack
 
+		opt 	zxnextreg
 		org 	$8000 								; $8000 boot.
 		jr 		Boot
 		org 	$8004 								; $8004 address of sysinfo

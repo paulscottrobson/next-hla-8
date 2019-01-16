@@ -186,9 +186,8 @@ class AssemblerWorker(object):
 	#		Assemble expression
 	#
 	def processExpression(self,expr):
-		operatorList = "+-*/&|^!?"											# known ops
-		regEx = "(["+("".join(["/"+x for x in operatorList]))+"])"			# make a regext
-		expr = [x for x in re.split(regEx,expr) if x != ""]					# split up.	
+		expr = [x for x in re.split("(\@?\d+)",expr) if x != ""]			# split up.	
+		print(expr)
 		if len(expr) % 2 == 0:
 			raise AssemblerException("Expression syntax error")
 		for i in range(0,len(expr),2):										# work through it.
@@ -212,6 +211,7 @@ if __name__ == "__main__":
 	endproc
 	def proc p4(a,b,c,d):
 		p4(a,b,c,d):p4(1,2,3,4)
+		$x=1+2-3*4/5%6&7|8^9
 	""".split("\n")
 	aw = AssemblerWorker(Z80CodeGenerator())		
 	aw.assemble(src)
